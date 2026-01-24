@@ -1,0 +1,25 @@
+# Fabric Network Artifacts
+organizations/peerOrganizations/
+organizations/ordererOrganizations/
+channel-artifacts/
+system-genesis-block/
+*.block
+*.tar.gz
+
+# Logs and Temp files
+log.txt
+tmp/
+*.log
+
+# Docker
+.env
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+
+# Chaincode binaries (if any)
+chaincode/*/venodr/
+chaincode/*/go.sum
+chaincode/*/docube-test # compiled binary

@@ -1,0 +1,15 @@
+# Copyright Docube System. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3.7'
+
+volumes:
+  orderer.docube.com:
+  peer0.adminorg.docube.com:
+  peer0.userorg.docube.com:
+
+networks:
+  docube:
+    name: docube_network
