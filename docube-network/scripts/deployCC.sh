@@ -18,7 +18,7 @@ CC_SEQUENCE="${6:-1}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . ${SCRIPT_DIR}/envVar.sh
 
-FABRIC_CFG_PATH=$PWD/../config/
+export FABRIC_CFG_PATH=${SCRIPT_DIR}/../../config
 
 println() {
   echo -e "$1"

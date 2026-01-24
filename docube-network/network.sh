@@ -15,7 +15,7 @@
 
 ROOTDIR=$(cd "$(dirname "$0")" && pwd)
 export PATH=${ROOTDIR}/../bin:${PWD}/../bin:$PATH
-export FABRIC_CFG_PATH=${PWD}/configtx
+export FABRIC_CFG_PATH=${ROOTDIR}/configtx
 export VERBOSE=false
 
 pushd ${ROOTDIR} > /dev/null

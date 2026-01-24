@@ -21,7 +21,7 @@ VERBOSE="$4"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . ${SCRIPT_DIR}/envVar.sh
 
-FABRIC_CFG_PATH=${PWD}/configtx
+export FABRIC_CFG_PATH=${SCRIPT_DIR}/../configtx
 
 if [ ! -d "channel-artifacts" ]; then
   mkdir channel-artifacts
@@ -64,7 +64,7 @@ createChannel() {
 
 # joinChannel ORG
 joinChannel() {
-  FABRIC_CFG_PATH=$PWD/../config/
+  export FABRIC_CFG_PATH=${SCRIPT_DIR}/../../config
   ORG=$1
   setGlobals $ORG
   local rc=1
@@ -88,13 +88,13 @@ setAnchorPeer() {
 }
 
 # Main flow
-FABRIC_CFG_PATH=${PWD}/configtx
+export FABRIC_CFG_PATH=${SCRIPT_DIR}/../configtx
 
 ## Create channel genesis block
 infoln "Creating channel genesis block..."
 createChannelGenesisBlock
 
-FABRIC_CFG_PATH=$PWD/../config/
+export FABRIC_CFG_PATH=${SCRIPT_DIR}/../../config
 BLOCKFILE="./channel-artifacts/${CHANNEL_NAME}.block"
 
 ## Create channel
