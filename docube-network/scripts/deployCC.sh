@@ -9,8 +9,8 @@
 # Usage: ./scripts/deployCC.sh <chaincode_name> <chaincode_path> <chaincode_lang>
 
 CHANNEL_NAME="${1:-docubechannel}"
-CC_NAME="${2:-docube-test}"
-CC_SRC_PATH="${3:-./chaincode/docube-test}"
+CC_NAME="${2:-document_nft_cc}"
+CC_SRC_PATH="${3:-./chaincode/docube}"
 CC_RUNTIME_LANGUAGE="${4:-golang}"
 CC_VERSION="${5:-1.0}"
 CC_SEQUENCE="${6:-1}"
@@ -175,8 +175,6 @@ commitChaincodeDefinitionAdminOnly
 infoln "Querying committed chaincode..."
 queryCommitted adminorg
 
-## Init the chaincode
-infoln "Invoking init function..."
-chaincodeInvokeInit
-
+## Chaincode ready (no init required for document_nft_cc)
 successln "Chaincode '${CC_NAME}' deployed successfully!"
+successln "Ready to use with namespaces: document:*, access:*"

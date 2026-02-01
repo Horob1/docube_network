@@ -23,3 +23,6 @@ tmp/
 chaincode/*/venodr/
 chaincode/*/go.sum
 chaincode/*/docube-test # compiled binary
+
+# tests
+tests/PERMISSION_TEST_RESULTS.txt

@@ -1,0 +1,14 @@
+# Copyright Docube System. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Docker-specific CouchDB overrides
+
+services:
+
+  couchdb0.adminorg:
+    container_name: couchdb0.adminorg
+
+  couchdb0.userorg:
+    container_name: couchdb0.userorg

@@ -116,6 +116,11 @@ function networkUp() {
   fi
 
   COMPOSE_FILES="-f compose/${COMPOSE_FILE_BASE} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_BASE}"
+  
+  # Add CouchDB compose files if enabled
+  if [ "${DATABASE}" == "couchdb" ]; then
+    COMPOSE_FILES="${COMPOSE_FILES} -f compose/${COMPOSE_FILE_COUCH} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_COUCH}"
+  fi
 
   DOCKER_SOCK="${DOCKER_SOCK}" ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} up -d 2>&1
 
@@ -157,6 +162,9 @@ function networkDown() {
     ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} down --volumes
   fi
 
+  # Also remove CouchDB volumes
+  ${CONTAINER_CLI} volume rm compose_couchdb0.adminorg compose_couchdb0.userorg 2>/dev/null || true
+
   # Don't remove the generated artifacts -- note, the ledgers are always removed
   if [ "$MODE" != "restart" ]; then
     ${CONTAINER_CLI} volume rm docker_orderer.docube.com docker_peer0.adminorg.docube.com docker_peer0.userorg.docube.com 2>/dev/null || true
@@ -169,9 +177,11 @@ function networkDown() {
 
 # Default values
 COMPOSE_FILE_BASE=compose-docube-net.yaml
+COMPOSE_FILE_COUCH=compose-couch.yaml
 CHANNEL_NAME="docubechannel"
 MAX_RETRY=5
 CLI_DELAY=3
+DATABASE="couchdb"  # Default to CouchDB
 
 # Get docker sock path from environment variable
 SOCK="${DOCKER_HOST:-/var/run/docker.sock}"

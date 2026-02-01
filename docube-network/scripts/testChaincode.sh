@@ -16,7 +16,7 @@ export FABRIC_CFG_PATH=${DOCUBE_HOME}/../config/
 export CORE_PEER_TLS_ENABLED=true
 
 CHANNEL_NAME="docubechannel"
-CC_NAME="docube-test"
+CC_NAME="document_nft_cc"
 ORDERER_CA=${DOCUBE_HOME}/organizations/ordererOrganizations/docube.com/tlsca/tlsca.docube.com-cert.pem
 
 # Colors
