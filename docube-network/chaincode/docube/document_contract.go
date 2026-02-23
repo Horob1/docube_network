@@ -76,11 +76,20 @@ func (dc *DocumentContract) CreateDocument(
 	}
 
 	// Emit event
-	return EmitEvent(ctx, EventDocumentCreated, EventPayload{
+	if err := EmitEvent(ctx, EventDocumentCreated, EventPayload{
 		AssetID:    doc.AssetID,
 		DocumentID: documentID,
 		ActorID:    caller.ID,
 		Timestamp:  timestamp,
+	}); err != nil {
+		return err
+	}
+
+	// Append timeline record
+	return AppendTimeline(ctx, documentID, ActionDocumentCreated, map[string]string{
+		"assetId":  doc.AssetID,
+		"docHash":  docHash,
+		"hashAlgo": hashAlgo,
 	})
 }
 
@@ -157,11 +166,20 @@ func (dc *DocumentContract) UpdateDocument(
 	}
 
 	// Emit event
-	return EmitEvent(ctx, EventDocumentUpdated, EventPayload{
+	if err := EmitEvent(ctx, EventDocumentUpdated, EventPayload{
 		AssetID:    doc.AssetID,
 		DocumentID: documentID,
 		ActorID:    caller.ID,
 		Timestamp:  timestamp,
+	}); err != nil {
+		return err
+	}
+
+	// Append timeline record
+	return AppendTimeline(ctx, documentID, ActionDocumentUpdated, map[string]string{
+		"newDocHash":  newDocHash,
+		"newHashAlgo": newHashAlgo,
+		"version":     fmt.Sprintf("%d", doc.Version),
 	})
 }
 
@@ -228,11 +246,20 @@ func (dc *DocumentContract) TransferOwnership(
 	}
 
 	// Emit event (using ActorID for old owner, can extend EventPayload if needed)
-	return EmitEvent(ctx, EventDocumentTransferred, EventPayload{
+	if err := EmitEvent(ctx, EventDocumentTransferred, EventPayload{
 		AssetID:    doc.AssetID,
 		DocumentID: documentID,
 		ActorID:    oldOwnerID,
 		Timestamp:  timestamp,
+	}); err != nil {
+		return err
+	}
+
+	// Append timeline record
+	return AppendTimeline(ctx, documentID, ActionOwnershipTransferred, map[string]string{
+		"oldOwnerId": oldOwnerID,
+		"newOwnerId": newOwnerID,
+		"newOwnerMsp": newOwnerMSP,
 	})
 }
 
@@ -299,12 +326,17 @@ func (dc *DocumentContract) SoftDeleteDocument(
 	}
 
 	// Emit event
-	return EmitEvent(ctx, EventDocumentDeleted, EventPayload{
+	if err := EmitEvent(ctx, EventDocumentDeleted, EventPayload{
 		AssetID:    doc.AssetID,
 		DocumentID: documentID,
 		ActorID:    caller.ID,
 		Timestamp:  timestamp,
-	})
+	}); err != nil {
+		return err
+	}
+
+	// Append timeline record
+	return AppendTimeline(ctx, documentID, ActionDocumentDeleted, nil)
 }
 
 // =============================================================================

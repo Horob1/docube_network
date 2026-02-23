@@ -106,11 +106,20 @@ func (ac *AccessContract) GrantAccess(
 	}
 
 	// Emit event
-	return EmitEvent(ctx, EventAccessGranted, EventPayload{
+	if err := EmitEvent(ctx, EventAccessGranted, EventPayload{
 		AssetID:    accessNFT.AccessNFTID,
 		DocumentID: documentID,
 		ActorID:    caller.ID,
 		Timestamp:  timestamp,
+	}); err != nil {
+		return err
+	}
+
+	// Append timeline record
+	return AppendTimeline(ctx, documentID, ActionAccessGranted, map[string]string{
+		"granteeUserId":  granteeUserID,
+		"granteeUserMsp": granteeUserMSP,
+		"systemUserId":   systemUserId,
 	})
 }
 
@@ -194,11 +203,18 @@ func (ac *AccessContract) RevokeAccess(
 	}
 
 	// Emit event
-	return EmitEvent(ctx, EventAccessRevoked, EventPayload{
+	if err := EmitEvent(ctx, EventAccessRevoked, EventPayload{
 		AssetID:    access.AccessNFTID,
 		DocumentID: documentID,
 		ActorID:    caller.ID,
 		Timestamp:  timestamp,
+	}); err != nil {
+		return err
+	}
+
+	// Append timeline record
+	return AppendTimeline(ctx, documentID, ActionAccessRevoked, map[string]string{
+		"userId": userID,
 	})
 }
 
@@ -350,4 +366,109 @@ func (ac *AccessContract) GetAccessHistory(
 	}
 
 	return history, nil
+}
+
+// =============================================================================
+// ACCESS PERMISSION CHECK (READ-ONLY)
+// =============================================================================
+
+// CheckAccessPermission checks whether the calling Fabric identity has access
+// to the specified document. This is a read-only (evaluate) function.
+//
+// Logic:
+//  1. Load document — if not found → DOC_NOT_FOUND
+//  2. If document status != ACTIVE → DOC_INACTIVE
+//  3. If caller.ID == doc.OwnerID → OWNER (always allowed)
+//  4. Check AccessNFT for caller → GRANTED or NOT_GRANTED
+//
+// Returns a JSON string: {"allowed":bool,"reason":"...","documentId":"...","callerId":"...","action":"..."}
+func (ac *AccessContract) CheckAccessPermission(
+	ctx contractapi.TransactionContextInterface,
+	documentID string,
+	action string,
+) (string, error) {
+	// Get caller identity
+	caller, err := GetCallerInfo(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get caller info: %w", err)
+	}
+
+	result := AccessCheckResult{
+		DocumentID: documentID,
+		CallerID:   caller.ID,
+		Action:     action,
+	}
+
+	// Load document
+	docKey, err := BuildDocumentKey(ctx, documentID)
+	if err != nil {
+		return "", fmt.Errorf("failed to build document key: %w", err)
+	}
+
+	doc, err := GetDocument(ctx, docKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to get document: %w", err)
+	}
+	if doc == nil {
+		result.Allowed = false
+		result.Reason = ReasonDocNotFound
+		return marshalResult(result)
+	}
+
+	// Check document status
+	if doc.Status != StatusActive {
+		result.Allowed = false
+		result.Reason = ReasonDocInactive
+		return marshalResult(result)
+	}
+
+	// Owner always has access
+	if caller.ID == doc.OwnerID {
+		result.Allowed = true
+		result.Reason = ReasonOwner
+		return marshalResult(result)
+	}
+
+	// Check access NFT
+	accessKey, err := BuildAccessKey(ctx, documentID, caller.ID)
+	if err != nil {
+		return "", fmt.Errorf("failed to build access key: %w", err)
+	}
+
+	access, err := GetAccessNFT(ctx, accessKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to get access NFT: %w", err)
+	}
+
+	if access != nil && access.Status == StatusActive {
+		result.Allowed = true
+		result.Reason = ReasonGranted
+		return marshalResult(result)
+	}
+
+	result.Allowed = false
+	result.Reason = ReasonNotGranted
+	return marshalResult(result)
+}
+
+// marshalResult helper to JSON-encode AccessCheckResult.
+func marshalResult(result AccessCheckResult) (string, error) {
+	data, err := json.Marshal(result)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal access check result: %w", err)
+	}
+	return string(data), nil
+}
+
+// =============================================================================
+// DOCUMENT TIMELINE QUERY
+// =============================================================================
+
+// GetDocumentTimeline retrieves the complete timeline (audit log) for a document.
+// Returns all timeline records sorted by composite key order (chronological).
+func (ac *AccessContract) GetDocumentTimeline(
+	ctx contractapi.TransactionContextInterface,
+	documentID string,
+) ([]*TimelineRecord, error) {
+	return GetDocumentTimelineRecords(ctx, documentID)
 }

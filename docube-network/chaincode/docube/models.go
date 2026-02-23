@@ -67,6 +67,27 @@ type AdminAuditPayload struct {
 	TxID       string `json:"txId"`       // Transaction ID
 }
 
+// TimelineRecord represents a single entry in the Document Timeline Audit Log.
+// Each write operation on a document (or its access records) appends one record.
+type TimelineRecord struct {
+	DocumentID string            `json:"documentId"` // Referenced document
+	TxID       string            `json:"txId"`       // Transaction ID
+	Timestamp  string            `json:"timestamp"`  // ISO8601 timestamp
+	Action     string            `json:"action"`     // Timeline action constant
+	ActorID    string            `json:"actorId"`    // Caller's Fabric identity
+	ActorMSP   string            `json:"actorMsp"`   // Caller's MSP
+	Details    map[string]string `json:"details"`    // Extra info (granteeId, oldOwner, newOwner, etc.)
+}
+
+// AccessCheckResult is returned by CheckAccessPermission.
+type AccessCheckResult struct {
+	Allowed    bool   `json:"allowed"`
+	Reason     string `json:"reason"`
+	DocumentID string `json:"documentId"`
+	CallerID   string `json:"callerId"`
+	Action     string `json:"action"`
+}
+
 // =============================================================================
 // STATUS CONSTANTS
 // =============================================================================
@@ -113,6 +134,32 @@ const (
 // =============================================================================
 
 const (
-	DocKeyPrefix    = "DOC"
-	AccessKeyPrefix = "ACC"
+	DocKeyPrefix      = "DOC"
+	AccessKeyPrefix   = "ACC"
+	TimelineKeyPrefix = "DOCLOG"
+)
+
+// =============================================================================
+// TIMELINE ACTION CONSTANTS
+// =============================================================================
+
+const (
+	ActionDocumentCreated       = "DOCUMENT_CREATED"
+	ActionDocumentUpdated       = "DOCUMENT_UPDATED"
+	ActionOwnershipTransferred  = "OWNERSHIP_TRANSFERRED"
+	ActionDocumentDeleted       = "DOCUMENT_DELETED"
+	ActionAccessGranted         = "ACCESS_GRANTED"
+	ActionAccessRevoked         = "ACCESS_REVOKED"
+)
+
+// =============================================================================
+// ACCESS CHECK REASON CONSTANTS
+// =============================================================================
+
+const (
+	ReasonOwner      = "OWNER"
+	ReasonGranted    = "GRANTED"
+	ReasonNotGranted = "NOT_GRANTED"
+	ReasonDocNotFound  = "DOC_NOT_FOUND"
+	ReasonDocInactive  = "DOC_INACTIVE"
 )
